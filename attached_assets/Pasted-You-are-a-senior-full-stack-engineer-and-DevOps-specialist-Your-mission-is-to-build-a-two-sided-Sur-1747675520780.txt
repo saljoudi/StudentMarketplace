@@ -1,0 +1,78 @@
+You are a senior full-stack engineer and DevOps specialist. Your mission is to build a two-sided Survey Platform MVP with the following requirements:
+
+---
+
+## 1. Project Overview
+- **Roles**  
+  - **Partner** (individual): signs up, answers pre-delivered surveys, sees completed history, views rewards wallet (cash & coupons), requests payouts.  
+  - **Business**: signs up, views delivered survey templates, inspects results (response count over time + respondent demographics charts), exports raw responses (CSV).
+
+- **Tech Stack**  
+  - **Backend**: Node.js, Express, Sequelize ORM, PostgreSQL  
+  - **Frontend**: React, React Router, Axios, Chart.js (or Recharts)  
+  - **Auth**: JWT for Partner vs. Business, custom login/signup  
+  - **Deployment**: GitHub → Render (two services: backend & frontend)  
+  - **Workflow**: Git commits with clear messages; wait for user ✅ before each major step.
+
+---
+
+## 2. Step-by-Step Instructions
+
+### Step 1: Scaffold Monorepo & Git
+1. Create folders: `/backend` and `/frontend`.  
+2. In project root, initialize Git and commit an empty scaffold.  
+3. Generate top-level `README.md` and `.gitignore`.  
+4. **Ask user for “Next”** before proceeding.
+
+### Step 2: Backend Setup
+1. In `/backend`, initialize `npm`, install `express`, `sequelize`, `pg`, `jsonwebtoken`, `bcrypt`, etc.  
+2. Create Sequelize config, migrations, and models for:
+   - **Business**, **Partner**, **SurveyTemplate**, **Question**, **Option**, **Response**, **Reward**, **PayoutRequest**.  
+3. Generate seeders for a few `SurveyTemplate`s and demo questions/options.  
+4. Build Express app:
+   - `app.js` / `server.js` with middleware, JWT guards (`isPartner`, `isBusiness`).  
+   - Routes & controllers:  
+     - Auth: `/signup/partner`, `/login/partner`, `/signup/business`, `/login/business`.  
+     - Partner:  
+       - `GET /partner/surveys`  
+       - `POST /partner/surveys/:id/responses`  
+       - `GET /partner/rewards`  
+       - `POST /partner/payouts`  
+     - Business:  
+       - `GET /business/surveys`  
+       - `GET /business/surveys/:id/results/counts`  
+       - `GET /business/surveys/:id/results/demographics`  
+       - `GET /business/surveys/:id/results/export`  
+5. **Ask user for “Next”** before creating controllers & testing.
+
+### Step 3: Frontend Setup
+1. In `/frontend`, bootstrap React app (`create-react-app` or Vite).  
+2. Install `react-router-dom`, `axios`, `chart.js` (or `recharts`).  
+3. Create pages & components:
+   - **Auth**: `/signup/partner`, `/login/partner`, `/signup/business`, `/login/business`.  
+   - **Partner Dashboard**: lists available & completed surveys, reward wallet, “Request Payout.”  
+   - **Survey Form**: dynamic rendering of questions/options, submission handler.  
+   - **Business Dashboard**: survey list, results page with:
+     - Line chart (responses/time)  
+     - Pie/bar chart (demographics)  
+     - “Export CSV” button  
+4. Centralize API calls in an `api/` folder using Axios, handling JWT.  
+5. **Ask user for “Next”** before styling & state management.
+
+### Step 4: Local Dev & Testing
+1. Provide `README.md` instructions:
+   - How to start Postgres (Docker).  
+   - How to run migrations & seeders.  
+   - Launch backend (`npm run dev`) and frontend (`npm start`).  
+2. Outline sample `.env` variables.  
+3. Smoke-test all endpoints and UI flows.  
+4. **Ask user for “Next”** before GitHub integration.
+
+### Step 5: GitHub Push
+1. In project root:
+   ```bash
+   git add .
+   git commit -m "feat: complete backend & frontend MVP implementation"
+   git branch -M main
+   git remote add origin https://github.com/YourUser/survey-platform-mvp.git
+   git push -u origin main
