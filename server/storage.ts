@@ -121,38 +121,49 @@ export class DatabaseStorage implements IStorage {
     // 2. Haven't been completed by the partner
     // 3. Haven't reached max responses
     // 4. Haven't expired
-    const completedSurveyIds = db.select({ id: surveyResponses.surveyId })
-      .from(surveyResponses)
-      .where(eq(surveyResponses.partnerId, partnerId));
+    
+    try {
+      // Get IDs of surveys the partner has already completed
+      const completedSurveyResponses = await db.select({ surveyId: surveyResponses.surveyId })
+        .from(surveyResponses)
+        .where(eq(surveyResponses.partnerId, partnerId));
+      
+      const completedIds = completedSurveyResponses.map(r => r.surveyId);
+      const now = new Date();
 
-    const now = new Date();
-
-    const availableSurveys = await db.select({
-      id: surveys.id,
-      title: surveys.title,
-      description: surveys.description,
-      estimatedTime: surveys.estimatedTime,
-      reward: surveys.reward,
-      expiresAt: surveys.expiresAt,
-      questionCount: sql<number>`(select count(*) from ${questions} where ${questions.surveyId} = ${surveys.id})`
-    })
-    .from(surveys)
-    .where(
-      and(
-        eq(surveys.status, 'active'),
-        not(surveys.id.in(completedSurveyIds)),
-        or(
-          isNull(surveys.maxResponses),
-          lt(surveys.responseCount, surveys.maxResponses)
-        ),
-        or(
-          isNull(surveys.expiresAt),
-          sql`${surveys.expiresAt} > ${now}`
+      // Query for available surveys
+      const availableSurveys = await db.select({
+        id: surveys.id,
+        title: surveys.title,
+        description: surveys.description,
+        estimatedTime: surveys.estimatedTime,
+        reward: surveys.reward,
+        expiresAt: surveys.expiresAt,
+        questionCount: sql<number>`(select count(*) from ${questions} where ${questions.surveyId} = ${surveys.id})`
+      })
+      .from(surveys)
+      .where(
+        and(
+          eq(surveys.status, 'active'),
+          completedIds.length > 0 
+            ? not(surveys.id.in(completedIds)) 
+            : sql`1=1`, // If no completed surveys, don't filter
+          or(
+            isNull(surveys.maxResponses),
+            lt(surveys.responseCount, surveys.maxResponses)
+          ),
+          or(
+            isNull(surveys.expiresAt),
+            sql`${surveys.expiresAt} > ${now}`
+          )
         )
-      )
-    );
+      );
 
-    return availableSurveys;
+      return availableSurveys;
+    } catch (error) {
+      console.error("Error fetching available surveys:", error);
+      return [];
+    }
   }
 
   async getCompletedSurveysForPartner(partnerId: number): Promise<any[]> {

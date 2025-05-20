@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth, registerPartnerSchema, registerBusinessSchema } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,11 +27,12 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [roleType, setRoleType] = useState<"partner" | "business">("partner");
 
-  // Redirect if already logged in
-  if (user) {
-    navigate(user.role === "partner" ? "/partner/dashboard" : "/business/dashboard");
-    return null;
-  }
+  // Use useEffect for navigation to avoid React warnings
+  useEffect(() => {
+    if (user) {
+      navigate(user.role === "partner" ? "/partner/dashboard" : "/business/dashboard");
+    }
+  }, [user, navigate]);
 
   // Login form
   const loginForm = useForm<LoginData>({
