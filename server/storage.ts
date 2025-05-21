@@ -257,7 +257,7 @@ export class DatabaseStorage implements IStorage {
       amount: rewards.amount,
       description: rewards.description,
       surveyId: rewards.surveyId,
-      surveyTitle: surveys.title,
+      partnerId: rewards.partnerId,
       expiresAt: rewards.expiresAt,
       createdAt: rewards.createdAt
     })
@@ -305,7 +305,7 @@ export class DatabaseStorage implements IStorage {
       )
     );
 
-    const cashBalance = (cashResult.total || 0) - (payoutsResult.total || 0);
+    const cashBalance = Number(cashResult.total || 0) - Number(payoutsResult.total || 0);
     const couponsCount = couponsResult.count || 0;
 
     return {
@@ -342,7 +342,9 @@ export class DatabaseStorage implements IStorage {
       ORDER BY day
     `);
     
-    for (const row of results) {
+    // Convert SQL result to array for iteration
+    const resultArray = Array.isArray(results) ? results : results.rows || [];
+    for (const row of resultArray) {
       const dayIndex = Math.floor((new Date(row.day).getTime() - subDays(new Date(), days).getTime()) / (24 * 60 * 60 * 1000));
       if (dayIndex >= 0 && dayIndex < days) {
         counts[dayIndex] = parseInt(row.count);
@@ -423,8 +425,9 @@ export class DatabaseStorage implements IStorage {
     .orderBy(desc(surveyResponses.completedAt));
     
     // For each response, get all answers
+    const responsesWithAnswers = [];
     for (const response of responses) {
-      response.answers = await db.select()
+      const responseAnswers = await db.select()
         .from(answers)
         .where(eq(answers.responseId, response.id));
     }
