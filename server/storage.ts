@@ -1,14 +1,15 @@
 import { users, partnerProfiles, businessProfiles, surveys, questions, surveyResponses, answers, rewards, payoutRequests, type User, type InsertUser, type InsertPartnerProfile, type InsertBusinessProfile, type Survey, type InsertSurvey, type Question, type InsertQuestion, type SurveyResponse, type InsertSurveyResponse, type Answer, type InsertAnswer, type Reward, type InsertReward, type PayoutRequest, type InsertPayoutRequest } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, lt, not, or, isNull, count, sum } from "drizzle-orm";
-import createMemoryStore from "memorystore";
 import session from "express-session";
 import { format, subDays } from 'date-fns';
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresStore = connectPgSimple(session);
 
 export interface IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -54,11 +55,12 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
+    this.sessionStore = new PostgresStore({
+      pool,
+      createTableIfMissing: true
     });
   }
 
