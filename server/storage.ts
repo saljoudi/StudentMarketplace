@@ -9,7 +9,7 @@ import { pool } from "./db";
 const PostgresStore = connectPgSimple(session);
 
 export interface IStorage {
-  sessionStore: session.Store;
+  sessionStore: any; // Using any temporarily to resolve type issues
 
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -148,7 +148,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(surveys.status, 'active'),
           completedIds.length > 0 
-            ? not(surveys.id.in(completedIds)) 
+            ? not(sql`${surveys.id} IN (${completedIds.join(',')})`) 
             : sql`1=1`, // If no completed surveys, don't filter
           or(
             isNull(surveys.maxResponses),
