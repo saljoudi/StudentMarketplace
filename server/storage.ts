@@ -424,17 +424,26 @@ export class DatabaseStorage implements IStorage {
     .where(eq(surveyResponses.surveyId, surveyId))
     .orderBy(desc(surveyResponses.completedAt));
     
-    // For each response, get all answers
-    const responsesWithAnswers = [];
-    for (const response of responses) {
-      const responseAnswers = await db.select()
-        .from(answers)
-        .where(eq(answers.responseId, response.id));
-    }
+    // Collect answers for each response and create properly structured objects
+    const responsesWithAnswers = await Promise.all(
+      responses.map(async (response) => {
+        const responseAnswers = await db.select()
+          .from(answers)
+          .where(eq(answers.responseId, response.id));
+        
+        // Create a new object that includes the response data and its answers
+        return {
+          id: response.id,
+          partnerId: response.partnerId,
+          completedAt: response.completedAt,
+          answers: responseAnswers
+        };
+      })
+    );
     
     return {
       questions: surveyQuestions,
-      responses
+      responses: responsesWithAnswers
     };
   }
 }
